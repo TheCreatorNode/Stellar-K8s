@@ -205,6 +205,7 @@ impl QuorumGraph {
         result
     }
 
+    #[allow(clippy::only_used_in_recursion)]
     fn combinations_helper(
         &self,
         validators: &[String],

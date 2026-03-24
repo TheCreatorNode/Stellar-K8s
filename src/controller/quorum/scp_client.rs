@@ -30,8 +30,8 @@ impl ScpClient {
     ///
     /// Endpoint: GET http://{pod_ip}:11626/scp?limit=1
     pub async fn query_scp_state(&self, pod_ip: &str) -> Result<ScpState> {
-        let url = format!("http://{}:11626/scp?limit=1", pod_ip);
-        debug!("Querying SCP state from {}", url);
+        let url = format!("http://{pod_ip}:11626/scp?limit=1");
+        debug!("Querying SCP state from {url}");
 
         let response = self.retry_request(&url, 3).await?;
         let json: Value = response.json().await?;
@@ -104,12 +104,12 @@ impl ScpClient {
         node_id: Option<&str>,
     ) -> Result<QuorumSetInfo> {
         let url = if let Some(id) = node_id {
-            format!("http://{}:11626/quorum?node={}&compact=false", pod_ip, id)
+            format!("http://{pod_ip}:11626/quorum?node={id}&compact=false")
         } else {
-            format!("http://{}:11626/quorum?compact=false", pod_ip)
+            format!("http://{pod_ip}:11626/quorum?compact=false")
         };
 
-        debug!("Querying quorum info from {}", url);
+        debug!("Querying quorum info from {url}");
 
         let response = self.retry_request(&url, 3).await?;
         let json: Value = response.json().await?;
@@ -125,8 +125,8 @@ impl ScpClient {
     ///
     /// Endpoint: GET http://{pod_ip}:11626/peers
     pub async fn query_peers(&self, pod_ip: &str) -> Result<Vec<PeerInfo>> {
-        let url = format!("http://{}:11626/peers", pod_ip);
-        debug!("Querying peers from {}", url);
+        let url = format!("http://{pod_ip}:11626/peers");
+        debug!("Querying peers from {url}");
 
         let response = self.retry_request(&url, 3).await?;
         let json: Value = response.json().await?;

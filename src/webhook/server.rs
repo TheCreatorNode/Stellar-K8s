@@ -262,7 +262,7 @@ impl WebhookServer {
             .route("/plugins", get(list_plugins_handler))
             .route("/plugins", post(add_plugin_handler))
             .route(
-                "/plugins/:name",
+                "/plugins/{name}",
                 axum::routing::delete(remove_plugin_handler),
             )
             .with_state(state);
@@ -327,7 +327,7 @@ async fn validate_handler(
     let request = match review.try_into() {
         Ok(req) => req,
         Err(e) => {
-            error!("Failed to parse admission request: {}", e);
+            error!("Failed to parse admission request: {e}");
             return (
                 StatusCode::BAD_REQUEST,
                 Json(
@@ -400,7 +400,7 @@ async fn mutate_handler(
                     (StatusCode::OK, Json(response.into_review()))
                 }
                 Err(e) => {
-                    error!("Failed to apply mutations: {}", e);
+                    error!("Failed to apply mutations: {e}");
                     let response =
                         AdmissionResponse::from(&req).deny(format!("Mutation failed: {e}"));
                     (StatusCode::OK, Json(response.into_review()))
@@ -408,7 +408,7 @@ async fn mutate_handler(
             }
         }
         Err(e) => {
-            error!("Failed to parse admission request: {}", e);
+            error!("Failed to parse admission request: {e}");
             (
                 StatusCode::BAD_REQUEST,
                 Json(
@@ -491,22 +491,19 @@ async fn db_trigger_handler(
                                 updated_nodes.push(output.name.clone());
                             }
                             Err(e) => {
-                                error!("Failed to update node status reactively: {}", e);
+                                error!("Failed to update node status reactively: {e}");
                                 errors.push(e.to_string());
                             }
                         }
                     }
                     Err(e) => {
-                        error!("Failed to create Kube client: {}", e);
+                        error!("Failed to create Kube client: {e}");
                         errors.push(e.to_string());
                     }
                 }
             }
             Err(e) => {
-                warn!(
-                    "Plugin {} failed on db trigger: {}",
-                    plugin.metadata.name, e
-                );
+                warn!("Plugin {} failed on db trigger: {e}", plugin.metadata.name);
                 errors.push(e.to_string());
             }
         }
@@ -569,7 +566,7 @@ async fn add_plugin_handler(
             Json(serde_json::json!({"status": "created"})),
         ),
         Err(e) => {
-            error!("Failed to add plugin: {}", e);
+            error!("Failed to add plugin: {e}");
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 Json(serde_json::json!({"error": e.to_string()})),
@@ -588,7 +585,7 @@ async fn remove_plugin_handler(
             Json(serde_json::json!({"status": "removed"})),
         ),
         Err(e) => {
-            error!("Failed to remove plugin: {}", e);
+            error!("Failed to remove plugin: {e}");
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 Json(serde_json::json!({"error": e.to_string()})),
@@ -604,7 +601,7 @@ fn validate_spec_builtin(object: &serde_json::Value) -> Option<ServerValidationR
         Err(e) => {
             return Some(ServerValidationResult {
                 allowed: false,
-                message: Some(format!("Invalid StellarNode manifest: {}", e)),
+                message: Some(format!("Invalid StellarNode manifest: {e}")),
                 warnings: vec![],
                 plugin_results: vec![],
                 total_execution_time_ms: 0,
@@ -764,8 +761,7 @@ mod tests {
                 || msg.contains("nodeType")
                 || msg.contains("parse")
                 || msg.contains("unknown"),
-            "expected descriptive rejection message, got: {}",
-            msg
+            "expected descriptive rejection message, got: {msg}"
         );
     }
 
@@ -791,8 +787,7 @@ mod tests {
         let msg = result.message.unwrap_or_default();
         assert!(
             msg.contains("validatorConfig") || msg.contains("required"),
-            "expected message about missing required field, got: {}",
-            msg
+            "expected message about missing required field, got: {msg}"
         );
     }
 

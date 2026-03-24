@@ -898,6 +898,8 @@ pub struct DisasterRecoveryConfig {
     pub failover_dns: Option<ExternalDNSConfig>,
     #[serde(default = "default_dr_check_interval")]
     pub health_check_interval: u32,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub drill_schedule: Option<DRDrillScheduleConfig>,
 }
 
 fn default_dr_check_interval() -> u32 {
@@ -931,6 +933,73 @@ pub struct DisasterRecoveryStatus {
     pub last_peer_contact: Option<String>,
     pub sync_lag: Option<u64>,
     pub failover_active: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub last_drill_time: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub last_drill_result: Option<DRDrillResult>,
+}
+
+/// Configuration for automated DR drill scheduling
+#[derive(Clone, Debug, Deserialize, Serialize, JsonSchema, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct DRDrillScheduleConfig {
+    /// Cron expression for drill scheduling (e.g., "0 2 * * 0" for weekly Sunday 2 AM)
+    pub schedule: String,
+    /// Whether to actually perform failover or just simulate it (dry-run)
+    #[serde(default)]
+    pub dry_run: bool,
+    /// Maximum time to wait for failover to complete (seconds)
+    #[serde(default = "default_drill_timeout")]
+    pub timeout_seconds: u32,
+    /// Whether to automatically rollback after drill completion
+    #[serde(default = "default_drill_auto_rollback")]
+    pub auto_rollback: bool,
+    /// Rollback delay after drill completion (seconds)
+    #[serde(default = "default_drill_rollback_delay")]
+    pub rollback_delay_seconds: u32,
+}
+
+fn default_drill_timeout() -> u32 {
+    300 // 5 minutes
+}
+
+fn default_drill_auto_rollback() -> bool {
+    true
+}
+
+fn default_drill_rollback_delay() -> u32 {
+    60 // 1 minute
+}
+
+/// Result of a DR drill execution
+#[derive(Clone, Debug, Deserialize, Serialize, JsonSchema, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct DRDrillResult {
+    /// Drill execution status
+    pub status: DRDrillStatus,
+    /// Time to recovery in milliseconds
+    pub time_to_recovery_ms: Option<u64>,
+    /// Whether standby successfully took over
+    pub standby_takeover_success: bool,
+    /// Whether application remained available during drill
+    pub application_availability: bool,
+    /// Human-readable message about drill result
+    pub message: String,
+    /// Timestamp when drill started
+    pub started_at: String,
+    /// Timestamp when drill completed
+    pub completed_at: Option<String>,
+}
+
+/// Status of a DR drill execution
+#[derive(Clone, Debug, Deserialize, Serialize, JsonSchema, PartialEq, Eq)]
+#[serde(rename_all = "lowercase")]
+pub enum DRDrillStatus {
+    Pending,
+    Running,
+    Success,
+    Failed,
+    RolledBack,
 }
 
 /// Configuration for cross-cluster communication

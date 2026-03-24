@@ -21,6 +21,7 @@ pub const CANARY_DEPLOYMENT_ANNOTATION: &str = "stellar.org/canary-deployment";
 pub const CANARY_TEST_STATUS_ANNOTATION: &str = "stellar.org/canary-test-status";
 pub const CVE_ROLLOUT_STATUS_ANNOTATION: &str = "stellar.org/cve-rollout-status";
 pub const CVE_ROLLBACK_REASON_ANNOTATION: &str = "stellar.org/cve-rollback-reason";
+pub const CVE_AUTO_PATCH_ANNOTATION: &str = "stellar.org/cve-auto-patch";
 
 #[allow(dead_code)]
 const CANARY_TEST_TIMEOUT_SECS: u64 = 300;

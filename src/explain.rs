@@ -107,7 +107,7 @@ pub fn explain_error(code: &str) {
         _ => None,
     };
 
-    println!("\nStellar Error Code: {}", code);
+    println!("\nStellar Error Code: {code}");
     println!("{}", "=".repeat(code.len() + 20));
 
     match explanation {

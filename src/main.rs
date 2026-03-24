@@ -142,32 +142,29 @@ async fn run_webhook(args: WebhookArgs) -> Result<(), Error> {
     let addr: std::net::SocketAddr = args
         .bind
         .parse()
-        .map_err(|e| Error::ConfigError(format!("Invalid bind address: {}", e)))?;
+        .map_err(|e| Error::ConfigError(format!("Invalid bind address: {e}")))?;
 
     // Initialize Wasm runtime
     let runtime = WasmRuntime::new()
-        .map_err(|e| Error::ConfigError(format!("Failed to initialize Wasm runtime: {}", e)))?;
+        .map_err(|e| Error::ConfigError(format!("Failed to initialize Wasm runtime: {e}")))?;
 
     // Create webhook server
     let mut server = WebhookServer::new(runtime);
 
     // Configure TLS if provided
     if let (Some(cert_path), Some(key_path)) = (args.cert_path, args.key_path) {
-        info!(
-            "Configuring TLS with cert: {}, key: {}",
-            cert_path, key_path
-        );
+        info!("Configuring TLS with cert: {cert_path}, key: {key_path}");
         server = server.with_tls(cert_path, key_path);
     } else {
         warn!("Running webhook server without TLS (not recommended for production)");
     }
 
     // Start the server
-    info!("Webhook server listening on {}", addr);
+    info!("Webhook server listening on {addr}");
     server
         .start(addr)
         .await
-        .map_err(|e| Error::ConfigError(format!("Webhook server error: {}", e)))?;
+        .map_err(|e| Error::ConfigError(format!("Webhook server error: {e}")))?;
 
     Ok(())
 }

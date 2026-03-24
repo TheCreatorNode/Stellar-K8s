@@ -87,7 +87,7 @@ async fn score_nodes_quorum_proximity<'a>(
     for peer_name in peer_names {
         // Find pods for this peer instance
         let lp = kube::api::ListParams::default()
-            .labels(&format!("app.kubernetes.io/instance={}", peer_name));
+            .labels(&format!("app.kubernetes.io/instance={peer_name}"));
         if let Ok(pods) = all_pods.list(&lp).await {
             for p in pods {
                 if let Some(node_name) = p.spec.as_ref().and_then(|s| s.node_name.as_ref()) {

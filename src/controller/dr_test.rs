@@ -22,6 +22,7 @@ mod tests {
             sync_strategy: sync,
             failover_dns: None,
             health_check_interval: 30,
+            drill_schedule: None,
         }
     }
 
@@ -42,6 +43,7 @@ mod tests {
             sync_strategy: DRSyncStrategy::Consensus,
             failover_dns: None,
             health_check_interval: 30,
+            drill_schedule: None,
         };
         // When enabled is false the reconciler returns Ok(None).
         // We verify the shape of the config to confirm the guard would fire.

@@ -21,6 +21,7 @@ use crate::controller::ControllerState;
 use crate::{Error, Result};
 
 use super::custom_metrics;
+use super::dashboard_handlers;
 use super::handlers;
 
 /// Build a rustls ServerConfig from PEM data (cert, key, CA for client verification).
@@ -67,6 +68,11 @@ async fn metrics_handler() -> String {
     buffer
 }
 
+/// Dashboard UI handler - serves the HTML dashboard
+async fn dashboard_ui() -> axum::response::Html<&'static str> {
+    axum::response::Html(include_str!("dashboard_ui.html"))
+}
+
 /// Run the REST API server.
 ///
 /// When `rustls_config` is `Some`, the server runs with mTLS. The same config can be
@@ -82,6 +88,14 @@ pub async fn run_server(
         .route("/leader", get(handlers::leader_status))
         .route("/api/v1/nodes", get(handlers::list_nodes))
         .route("/api/v1/nodes/:namespace/:name", get(handlers::get_node))
+        // Dashboard routes
+        .route("/", get(dashboard_ui))
+        .route("/api/v1/dashboard/overview", get(dashboard_handlers::dashboard_overview))
+        .route("/api/v1/dashboard/nodes/:namespace/:name/logs", get(dashboard_handlers::get_node_logs))
+        .route("/api/v1/dashboard/nodes/:namespace/:name/conditions", get(dashboard_handlers::get_node_conditions))
+        .route("/api/v1/dashboard/nodes/:namespace/:name/metrics", get(dashboard_handlers::get_node_metrics))
+        .route("/api/v1/dashboard/nodes/:namespace/:name/actions", axum::routing::post(dashboard_handlers::execute_node_action))
+        // Custom metrics API
         .route(
             "/apis/custom.metrics.k8s.io/v1beta2/namespaces/:namespace/pods/:name/:metric",
             get(custom_metrics::get_pod_metric),

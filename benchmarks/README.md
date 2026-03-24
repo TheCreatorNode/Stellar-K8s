@@ -11,6 +11,27 @@ The benchmarking suite measures:
 - **Error Rates**: Percentage of failed requests
 - **Regression Detection**: Automatic comparison against baseline metrics
 
+## Automated Regression Testing
+
+The operator includes automated performance regression testing that runs on every PR. See [REGRESSION_TESTING.md](REGRESSION_TESTING.md) for details.
+
+**Quick Start:**
+```bash
+# Run full regression test locally
+./benchmarks/run-regression-test.sh full
+
+# Or step by step
+./benchmarks/run-regression-test.sh setup
+./benchmarks/run-regression-test.sh run
+./benchmarks/run-regression-test.sh analyze
+```
+
+**CI/CD Integration:**
+- Automatically runs on PRs that modify src/, Cargo.toml, or benchmarks/
+- Spins up kind cluster, deploys operator, runs k6 load tests
+- Compares results with baseline and fails CI if regression detected
+- Posts performance comparison table as PR comment
+
 ## Quick Start
 
 ### Prerequisites

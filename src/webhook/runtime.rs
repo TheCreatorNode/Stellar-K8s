@@ -312,8 +312,7 @@ impl WasmRuntime {
 
         if result_code != 0 {
             return Err(Error::PluginError(format!(
-                "DB Trigger Plugin {} returned error code {}",
-                plugin_name, result_code
+                "DB Trigger Plugin {plugin_name} returned error code {result_code}"
             )));
         }
 
