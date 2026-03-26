@@ -80,6 +80,17 @@ struct RunArgs {
     #[arg(long, env = "OPERATOR_NAMESPACE", default_value = "default")]
     namespace: String,
 
+    /// Restrict the operator to only watch and manage StellarNode resources in a specific namespace.
+    ///
+    /// When unset (default), the operator watches all namespaces and requires cluster-wide RBAC.
+    /// When set, the operator only reconciles StellarNodes in this namespace and can run with
+    /// namespace-scoped RBAC (Role/RoleBinding).
+    /// Env: WATCH_NAMESPACE
+    ///
+    /// Example: --watch-namespace stellar-prod
+    #[arg(long, env = "WATCH_NAMESPACE")]
+    watch_namespace: Option<String>,
+
     /// Simulate reconciliation without applying any changes to the cluster.
     ///
     /// All reconciliation logic runs normally, but no Kubernetes API write calls are made.
@@ -122,7 +133,8 @@ struct RunArgs {
     #[arg(long)]
     dump_config: bool,
 
-    /// Run preflight checks and exit without starting the operator
+    /// Run preflight checks and exit without starting the operator.
+    /// Env: PREFLIGHT_ONLY
     #[arg(long, env = "PREFLIGHT_ONLY")]
     preflight_only: bool,
 }
@@ -544,6 +556,7 @@ async fn run_operator(args: RunArgs) -> Result<(), Error> {
         let resolved = serde_json::json!({
             "cli": {
                 "namespace": args.namespace,
+                "watch_namespace": args.watch_namespace,
                 "enable_mtls": args.enable_mtls,
                 "dry_run": args.dry_run,
                 "scheduler": args.scheduler,
@@ -701,6 +714,7 @@ async fn run_operator(args: RunArgs) -> Result<(), Error> {
         client: client.clone(),
         enable_mtls: args.enable_mtls,
         operator_namespace: args.namespace.clone(),
+        watch_namespace: args.watch_namespace.clone(),
         mtls_config: mtls_config.clone(),
         dry_run: args.dry_run,
         is_leader: Arc::clone(&is_leader),
@@ -1058,6 +1072,12 @@ mod cli_tests {
     fn run_namespace_flag() {
         let args = parse_run(&["--namespace", "stellar-system"]).unwrap();
         assert_eq!(args.namespace, "stellar-system");
+    }
+
+    #[test]
+    fn run_watch_namespace_flag() {
+        let args = parse_run(&["--watch-namespace", "stellar-prod"]).unwrap();
+        assert_eq!(args.watch_namespace, Some("stellar-prod".to_string()));
     }
 
     #[test]

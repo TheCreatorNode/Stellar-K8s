@@ -82,6 +82,9 @@ pub struct ControllerState {
     pub client: Client,
     pub enable_mtls: bool,
     pub operator_namespace: String,
+    /// Restrict the operator to only watch and manage StellarNode resources in this namespace.
+    /// If None, the operator watches all namespaces.
+    pub watch_namespace: Option<String>,
     pub mtls_config: Option<crate::MtlsConfig>,
     pub dry_run: bool,
     pub is_leader: std::sync::Arc<std::sync::atomic::AtomicBool>,
@@ -132,9 +135,20 @@ pub struct ControllerState {
 /// ```
 pub async fn run_controller(state: Arc<ControllerState>) -> Result<()> {
     let client = state.client.clone();
-    let stellar_nodes: Api<StellarNode> = Api::all(client.clone());
+    let stellar_nodes: Api<StellarNode> = if let Some(ns) = &state.watch_namespace {
+        Api::namespaced(client.clone(), ns)
+    } else {
+        Api::all(client.clone())
+    };
 
-    info!("Starting StellarNode controller");
+    info!(
+        "Starting StellarNode controller (mode: {})",
+        if state.watch_namespace.is_some() {
+            format!("namespace-scoped: {}", state.watch_namespace.as_ref().unwrap())
+        } else {
+            "cluster-scoped".to_string()
+        }
+    );
 
     // Verify CRD exists
     match stellar_nodes.list(&Default::default()).await {
@@ -152,11 +166,46 @@ pub async fn run_controller(state: Arc<ControllerState>) -> Result<()> {
 
     Controller::new(stellar_nodes, Config::default())
         // Watch owned resources for changes
-        .owns::<Deployment>(Api::all(client.clone()), Config::default())
-        .owns::<StatefulSet>(Api::all(client.clone()), Config::default())
-        .owns::<Service>(Api::all(client.clone()), Config::default())
-        .owns::<PersistentVolumeClaim>(Api::all(client.clone()), Config::default())
-        .owns::<PodDisruptionBudget>(Api::all(client.clone()), Config::default())
+        .owns::<Deployment>(
+            if let Some(ns) = &state.watch_namespace {
+                Api::namespaced(client.clone(), ns)
+            } else {
+                Api::all(client.clone())
+            },
+            Config::default(),
+        )
+        .owns::<StatefulSet>(
+            if let Some(ns) = &state.watch_namespace {
+                Api::namespaced(client.clone(), ns)
+            } else {
+                Api::all(client.clone())
+            },
+            Config::default(),
+        )
+        .owns::<Service>(
+            if let Some(ns) = &state.watch_namespace {
+                Api::namespaced(client.clone(), ns)
+            } else {
+                Api::all(client.clone())
+            },
+            Config::default(),
+        )
+        .owns::<PersistentVolumeClaim>(
+            if let Some(ns) = &state.watch_namespace {
+                Api::namespaced(client.clone(), ns)
+            } else {
+                Api::all(client.clone())
+            },
+            Config::default(),
+        )
+        .owns::<PodDisruptionBudget>(
+            if let Some(ns) = &state.watch_namespace {
+                Api::namespaced(client.clone(), ns)
+            } else {
+                Api::all(client.clone())
+            },
+            Config::default(),
+        )
         .shutdown_on_signal()
         .run(reconcile, error_policy, state)
         .for_each(|res| async move {

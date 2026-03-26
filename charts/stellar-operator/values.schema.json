@@ -184,10 +184,9 @@
           "maximum": 65535,
           "description": "Prometheus metrics port"
         },
-        "watchNamespaces": {
-          "type": "array",
-          "items": { "type": "string" },
-          "description": "Namespaces to watch; empty means all namespaces"
+        "watchNamespace": {
+          "type": "string",
+          "description": "Namespace to watch; empty means all namespaces"
         }
       }
     },
