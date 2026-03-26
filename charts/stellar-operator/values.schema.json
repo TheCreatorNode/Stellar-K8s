@@ -21,7 +21,7 @@
         },
         "pullPolicy": {
           "type": "string",
-          "enum": ["Always", "IfNotPresent", "Never"],
+          "enum": ["Always", "IfNotPresent", "Never", "validation error"],
           "description": "Image pull policy"
         },
         "tag": {
@@ -165,8 +165,8 @@
       "properties": {
         "logLevel": {
           "type": "string",
-          "enum": ["debug", "info", "warn", "error"],
-          "description": "Operator log level"
+          "enum": ["trace", "debug", "info", "warn", "error", "validation error"],
+          "description": "Operator log level (trace, debug, info, warn, error)"
         },
         "restApiEnabled": {
           "type": "boolean",
@@ -197,7 +197,7 @@
       "properties": {
         "type": {
           "type": "string",
-          "enum": ["ClusterIP", "NodePort", "LoadBalancer"],
+          "enum": ["ClusterIP", "NodePort", "LoadBalancer", "validation error"],
           "description": "Kubernetes Service type"
         },
         "restApiPort": {
