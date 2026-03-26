@@ -66,6 +66,7 @@ impl std::fmt::Display for HistoryMode {
 
 /// Target Stellar network
 #[derive(Clone, Debug, Default, Deserialize, Serialize, JsonSchema, PartialEq, Eq)]
+#[serde(untagged)]
 pub enum StellarNetwork {
     Mainnet,
     #[default]
@@ -671,7 +672,7 @@ impl Default for NetworkPolicyConfig {
 
 /// Rollout strategy for updates
 #[derive(Clone, Debug, Default, Deserialize, Serialize, JsonSchema, PartialEq, Eq)]
-#[serde(rename_all = "camelCase")]
+#[serde(untagged)]
 pub enum RolloutStrategy {
     #[default]
     RollingUpdate,
