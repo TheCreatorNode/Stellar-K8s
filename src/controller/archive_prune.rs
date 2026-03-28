@@ -15,25 +15,14 @@ use chrono::{Duration, Utc};
 use clap::Parser;
 use futures::stream::{self, StreamExt};
 use serde::{Deserialize, Serialize};
-use std::collections::BTreeMap;
 use std::sync::Arc;
-use std::time::Duration as StdDuration;
 use tokio::sync::Semaphore;
 use tracing::{debug, error, info, warn};
 
 use crate::Error;
 
-/// Maximum number of concurrent S3 operations
-const MAX_CONCURRENT_DELETES: usize = 10;
-
 /// Minimum number of checkpoints to always retain (safety buffer)
 const MIN_CHECKPOINTS_TO_RETAIN: u32 = 10;
-
-/// Stellar checkpoint frequency (every 64 ledgers, ~5 minutes at 5s/ledger)
-const CHECKPOINT_LEDGER_INTERVAL: u32 = 64;
-
-/// Approximate seconds per ledger on mainnet
-const SECONDS_PER_LEDGER: f64 = 5.0;
 
 /// Prune archive subcommand arguments
 #[derive(Parser, Debug, Clone)]
@@ -495,8 +484,8 @@ pub async fn execute_prune(
             let errors = errors.clone();
             let location = location.clone();
             async move {
-                let _permit = semaphore.acquire().await.unwrap();
-                
+                let _permit = semaphore.acquire().await.expect("Semaphore acquired");
+
                 match delete_checkpoint(&checkpoint, &location).await {
                     Ok(_) => {
                         debug!("Deleted checkpoint: ledger {}", checkpoint.ledger_seq);
@@ -651,6 +640,8 @@ pub async fn prune_archive(args: PruneArchiveArgs) -> Result<(), Error> {
 
 #[cfg(test)]
 mod tests {
+    #![allow(clippy::unwrap_used)]
+
     use super::*;
 
     #[test]

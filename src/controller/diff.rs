@@ -13,22 +13,19 @@
 use clap::Parser;
 use k8s_openapi::api::apps::v1::{Deployment, StatefulSet};
 use k8s_openapi::api::autoscaling::v2::HorizontalPodAutoscaler;
-use k8s_openapi::api::core::v1::{ConfigMap, PersistentVolumeClaim, Pod, Service};
+use k8s_openapi::api::core::v1::{ConfigMap, PersistentVolumeClaim, Service};
 use k8s_openapi::api::networking::v1::{Ingress, NetworkPolicy};
 use k8s_openapi::api::policy::v1::PodDisruptionBudget;
 use k8s_openapi::apimachinery::pkg::apis::meta::v1::ObjectMeta;
-use kube::api::{Api, GetParams, ListParams, Patch};
-use kube::{Client, Resource, ResourceExt};
+use kube::api::Api;
+use kube::{Client, ResourceExt};
 use serde::Serialize;
 use serde_json::Value;
-use std::collections::BTreeMap;
 use std::fmt::Write;
-use tracing::{debug, info, warn};
+use tracing::info;
 
-use crate::controller::resources::{
-    build_config_map, ensure_deployment, ensure_statefulset, resource_name, standard_labels,
-};
-use crate::crd::{StellarNode, StellarNodeSpec};
+use crate::controller::resources::{build_config_map, resource_name, standard_labels};
+use crate::crd::StellarNode;
 use crate::Error;
 
 /// Output format for diff
@@ -205,16 +202,11 @@ impl DiffResult {
             return Ok(());
         }
 
-        // Group by status
-        let (added, removed, modified, unchanged): (Vec<_>, Vec<_>, Vec<_>, Vec<_>) =
-            self.resources.iter().partition_map(|r| {
-                match r.status.as_str() {
-                    "added" => itertools::Either::Left(itertools::Either::Left(itertools::Either::Left(r))),
-                    "removed" => itertools::Either::Left(itertools::Either::Left(itertools::Either::Right(r))),
-                    "modified" => itertools::Either::Left(itertools::Either::Right(r)),
-                    _ => itertools::Either::Right(r),
-                }
-            });
+        // Group by status using simple filters
+        let added: Vec<_> = self.resources.iter().filter(|r| r.status == "added").collect();
+        let removed: Vec<_> = self.resources.iter().filter(|r| r.status == "removed").collect();
+        let modified: Vec<_> = self.resources.iter().filter(|r| r.status == "modified").collect();
+        let unchanged: Vec<_> = self.resources.iter().filter(|r| r.status == "unchanged").collect();
 
         // Only show resources with changes unless --all-resources
         let show_all = args.all_resources;
@@ -777,6 +769,7 @@ fn generate_diff(
 }
 
 /// Generate unified diff text
+#[allow(clippy::unwrap_used)]
 fn generate_unified_diff(
     from_label: &str,
     to_label: &str,
@@ -819,6 +812,8 @@ fn generate_unified_diff(
 
 #[cfg(test)]
 mod tests {
+    #![allow(clippy::unwrap_used)]
+
     use super::*;
 
     #[test]
