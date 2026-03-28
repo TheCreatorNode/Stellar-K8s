@@ -485,6 +485,33 @@ podDisruptionBudget:
 
 For comprehensive guidance on PDB configuration, emergency maintenance procedures, and troubleshooting, see **[docs/pod-disruption-budget.md](docs/pod-disruption-budget.md)**.
 
+### History Archive Management
+
+Stellar-K8s includes a `prune-archive` utility for safely managing history archive storage costs:
+
+```bash
+# Dry-run mode (default - no deletions)
+stellar-operator prune-archive \
+  --archive-url s3://my-bucket/stellar-history \
+  --retention-days 30
+
+# Execute pruning with safety guarantees
+stellar-operator prune-archive \
+  --archive-url s3://my-bucket/stellar-history \
+  --retention-days 30 \
+  --force
+```
+
+**Safety Features:**
+
+- ✅ Dry-run enabled by default
+- ✅ Minimum checkpoint retention (50 checkpoints)
+- ✅ Maximum age protection (7 days)
+- ✅ Checkpoint validation before deletion
+- ✅ Concurrent deletion with error handling
+
+For comprehensive documentation, see **[docs/archive-pruning.md](docs/archive-pruning.md)**.
+
 ---
 
 ## 📖 API Reference

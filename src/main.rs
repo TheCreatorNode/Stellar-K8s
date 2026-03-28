@@ -11,6 +11,7 @@ use kube::api::{Api, ObjectMeta, Patch, PatchParams, PostParams};
 use kube::ResourceExt;
 use stellar_k8s::infra;
 use stellar_k8s::{controller, crd::StellarNode, preflight, Error};
+use stellar_k8s::controller::archive_prune::{PruneArchiveArgs, prune_archive};
 use tracing::{debug, info, info_span, warn, Instrument, Level};
 use tracing_subscriber::{fmt, prelude::*, EnvFilter};
 
@@ -50,6 +51,8 @@ enum Commands {
     Info(InfoArgs),
     /// Verify StellarNode CRD installation and expected version
     CheckCrd,
+    /// Prune old history archive checkpoints
+    PruneArchive(PruneArchiveArgs),
     /// Local simulator (kind/k3s + operator + demo validators)
     Simulator(SimulatorCli),
     /// Generate shell completion scripts
@@ -321,6 +324,9 @@ async fn main() -> Result<(), Error> {
             let name = cmd.get_name().to_string();
             generate(shell, &mut cmd, name, &mut std::io::stdout());
             return Ok(());
+        }
+        Commands::PruneArchive(prune_args) => {
+            return prune_archive(prune_args).await;
         }
     }
 }
