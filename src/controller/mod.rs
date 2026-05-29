@@ -205,3 +205,5 @@ pub use webhook_delivery::{
 pub mod ml_pipeline;
 pub mod observability_pipeline;
 pub mod observability_dashboard;
+pub mod pvc_autoscaler;
+pub mod upgrade_orchestrator;
