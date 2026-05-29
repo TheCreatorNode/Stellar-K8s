@@ -2022,6 +2022,16 @@ fn build_pod_template(
     }
 
     // ==========================================================================
+    // Append user-defined init containers after all operator-managed ones
+    // ==========================================================================
+    if let Some(user_init_containers) = &node.spec.init_containers {
+        pod_spec
+            .init_containers
+            .get_or_insert_with(Vec::new)
+            .extend(user_init_containers.iter().cloned());
+    }
+
+    // ==========================================================================
     // Inject hitless-upgrade handoff sidecar (Validators only, when enabled)
     // ==========================================================================
     if let Some(hu_config) = &node.spec.hitless_upgrade {
