@@ -125,6 +125,7 @@ mod remediation_test;
 pub(crate) mod resources;
 #[cfg(test)]
 mod resources_test;
+pub(crate) mod secret_watcher;
 pub mod service_mesh;
 mod snapshot;
 pub mod secret_policy_controller;
