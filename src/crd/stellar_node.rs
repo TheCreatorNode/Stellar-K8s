@@ -295,6 +295,26 @@ pub struct StellarNodeSpec {
     #[schemars(with = "Option<Vec<serde_json::Value>>")]
     pub sidecars: Option<Vec<k8s_openapi::api::core::v1::Container>>,
 
+    /// Optional init containers to run before the main Stellar container starts.
+    ///
+    /// These run to completion in order before the main container starts.
+    /// Useful for tasks like fetching custom configuration, restoring state,
+    /// or pre-populating volumes.
+    ///
+    /// # Example
+    /// ```yaml
+    /// initContainers:
+    ///   - name: fetch-config
+    ///     image: curlimages/curl:latest
+    ///     command: ["sh", "-c", "curl -o /data/custom.cfg https://config.example.com/stellar.cfg"]
+    ///     volumeMounts:
+    ///       - name: data
+    ///         mountPath: /data
+    /// ```
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(with = "Option<Vec<serde_json::Value>>")]
+    pub init_containers: Option<Vec<k8s_openapi::api::core::v1::Container>>,
+
     /// Optional overrides for the liveness, readiness, and startup probes on the main container.
     ///
     /// When set, the specified fields replace the operator's built-in probe defaults.
@@ -430,6 +450,7 @@ impl Default for StellarNodeSpec {
             custom_network_passphrase: None,
             passphrase_secret_ref: None,
             sidecars: None,
+            init_containers: None,
             cert_manager: None,
             probes: None,
             cross_cloud_failover: None,
