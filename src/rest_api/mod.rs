@@ -11,5 +11,7 @@ mod handlers;
 mod server;
 mod sustainability;
 
+pub mod gateway;
+
 pub use auth::{check_rbac_permission, k8s_rbac_auth};
 pub use server::{build_tls_server_config, run_server};
