@@ -47,6 +47,7 @@ mod resources;
 mod resources_test;
 pub mod service_mesh;
 mod snapshot;
+pub mod state_sync;
 pub mod traffic;
 #[cfg(test)]
 mod traffic_test;
@@ -74,4 +75,9 @@ pub use remediation::{can_remediate, check_stale_node, RemediationLevel, StaleCh
 pub use service_mesh::{
     delete_service_mesh_resources, ensure_destination_rule, ensure_peer_authentication,
     ensure_request_authentication, ensure_virtual_service,
+};
+pub use state_sync::{
+    build_state_sync_sidecar, check_state_consistency, ensure_ledger_state_configmap,
+    ledger_state_configmap_name, reconcile_state_sync, ConsistencyCheckResult, LedgerStateSnapshot,
+    StateSyncStatus, MAX_ACCEPTABLE_LAG_LEDGERS, STATE_SYNC_SIDECAR_IMAGE,
 };

@@ -1333,6 +1333,16 @@ fn build_pod_template(
         }
     }
 
+    // Add state-sync sidecar if enabled
+    if let Some(dr_config) = &node.spec.dr_config {
+        if dr_config.enabled
+            && dr_config.sync_strategy == crate::crd::DRSyncStrategy::StreamingLedger
+        {
+            let sidecar = super::state_sync::build_state_sync_sidecar(node);
+            pod_spec.containers.push(sidecar);
+        }
+    }
+
     // Add mTLS certificate volume
     let volumes = pod_spec.volumes.get_or_insert_with(Vec::new);
     volumes.push(Volume {

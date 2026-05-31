@@ -978,6 +978,10 @@ pub enum DRSyncStrategy {
     Consensus,
     PeerTracking,
     ArchiveSync,
+    /// Continuously stream captive core ledger state via a sidecar container.
+    /// Publishes a [`LedgerStateSnapshot`] ConfigMap every second, enabling
+    /// zero-RPO cross-region synchronization.
+    StreamingLedger,
 }
 
 /// Status of the Disaster Recovery setup

@@ -15,6 +15,30 @@ use tracing::{debug, info, info_span, warn, Instrument, Level};
 use tracing_subscriber::{fmt, prelude::*, EnvFilter};
 
 #[derive(Parser, Debug)]
+#[command(about = "Run the state-sync sidecar")]
+struct SidecarArgs {
+    /// URL of the local Stellar Core HTTP API
+    #[arg(long, env = "STELLAR_CORE_HTTP_URL", default_value = "http://localhost:11626")]
+    stellar_core_http_url: String,
+
+    /// Kubernetes namespace (from Downward API)
+    #[arg(long, env = "NAMESPACE")]
+    namespace: String,
+
+    /// StellarNode resource name (from Downward API)
+    #[arg(long, env = "NODE_NAME")]
+    node_name: String,
+
+    /// How often to poll Core (default: 1)
+    #[arg(long, env = "POLL_INTERVAL_SECS", default_value = "1")]
+    poll_interval_secs: u64,
+
+    /// Expected network passphrase for validation
+    #[arg(long, env = "NETWORK_PASSPHRASE")]
+    network_passphrase: String,
+}
+
+#[derive(Parser, Debug)]
 #[command(
     author,
     version,
@@ -50,6 +74,8 @@ enum Commands {
     Info(InfoArgs),
     /// Verify StellarNode CRD installation and expected version
     CheckCrd,
+    /// Run the state-sync sidecar
+    Sidecar(SidecarArgs),
     /// Local simulator (kind/k3s + operator + demo validators)
     Simulator(SimulatorCli),
     /// Generate shell completion scripts
@@ -311,6 +337,9 @@ async fn main() -> Result<(), Error> {
         Commands::Webhook(webhook_args) => {
             return run_webhook(webhook_args).await;
         }
+        Commands::Sidecar(sidecar_args) => {
+            return run_sidecar(sidecar_args).await;
+        }
         Commands::Simulator(cli) => {
             return run_simulator(cli).await;
         }
@@ -323,6 +352,37 @@ async fn main() -> Result<(), Error> {
             return Ok(());
         }
     }
+}
+
+async fn run_sidecar(args: SidecarArgs) -> Result<(), Error> {
+    // Initialize tracing
+    let env_filter = EnvFilter::builder()
+        .with_default_directive(Level::INFO.into())
+        .from_env_lossy();
+    let fmt_layer = fmt::layer().with_target(true);
+    tracing_subscriber::registry()
+        .with(env_filter)
+        .with(fmt_layer)
+        .init();
+
+    info!(
+        "Starting State-Sync Sidecar for {}/{} (interval={}s)",
+        args.namespace, args.node_name, args.poll_interval_secs
+    );
+
+    let client = kube::Client::try_default()
+        .await
+        .map_err(Error::KubeError)?;
+
+    controller::state_sync::run_sidecar_loop(
+        client,
+        &args.namespace,
+        &args.node_name,
+        &args.stellar_core_http_url,
+        args.poll_interval_secs,
+        &args.network_passphrase,
+    )
+    .await
 }
 
 async fn run_simulator(cli: SimulatorCli) -> Result<(), Error> {

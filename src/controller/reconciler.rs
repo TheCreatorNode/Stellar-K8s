@@ -899,6 +899,14 @@ pub(crate) async fn apply_stellar_node(
         // Continue to ensure resources exist but with 0 replicas
     }
 
+    // 3. Service and Cross-Cluster networking
+    apply_or_emit(ctx, node, ActionType::Create, "Service", async {
+        resources::ensure_service(client, node, ctx.enable_mtls, ctx.dry_run).await?;
+        super::cross_cluster::ensure_cross_cluster_services(client, node).await?;
+        Ok(())
+    })
+    .await?;
+
     // 4. Ensure mTLS certificates
     apply_or_emit(ctx, node, ActionType::Update, "mTLS certificates", async {
         mtls::ensure_ca(client, &namespace).await?;
@@ -1336,6 +1344,29 @@ pub(crate) async fn apply_stellar_node(
             Ok(())
         })
         .await?;
+    }
+
+    // 8b. Cross-region state synchronization (StreamingLedger strategy)
+    if let Some(sync_status) = super::state_sync::reconcile_state_sync(client, node).await? {
+        if sync_status.fork_detected {
+            warn!(
+                "FORK DETECTED on {}: hash-chain inconsistency between primary and standby",
+                node.name_any()
+            );
+        }
+        if !sync_status.within_threshold {
+            warn!(
+                "State sync lag exceeded on {}: {} ledgers behind",
+                node.name_any(),
+                sync_status.lag_ledgers
+            );
+        }
+        debug!(
+            "State sync status for {}: lag={} ledgers, in_threshold={}",
+            node.name_any(),
+            sync_status.lag_ledgers,
+            sync_status.within_threshold
+        );
     }
 
     // 9. Auto-remediation check

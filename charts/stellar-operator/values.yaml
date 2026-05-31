@@ -142,3 +142,30 @@ featureFlags:
   enableArchiveHealth: "true"
   # Enable Soroban-specific Prometheus metrics collection
   enableSorobanMetrics: "true"
+
+# Cross-region state synchronization configuration.
+# Enables zero-RPO disaster recovery by streaming captive core ledger state
+# across geographical regions via the state-sync sidecar.
+#
+# To activate:
+#   1. Set featureFlags.enableDr: "true"
+#   2. Set crossRegion.enabled: true
+#   3. Configure at least one peerCluster entry
+#   4. Set dr_config.sync_strategy: streamingledger on your StellarNode CRs
+crossRegion:
+  enabled: false
+  # List of peer clusters to create ExternalName bridge services for.
+  # Each entry creates a Service of type ExternalName pointing at the peer.
+  peerClusters: []
+  # Example:
+  # peerClusters:
+  #   - clusterId: "us-east-1"
+  #     endpoint: "k8s-api.us-east-1.example.com"
+  #     region: "us-east-1"
+  #     port: 11625
+  #     enabled: true
+  #   - clusterId: "eu-west-1"
+  #     endpoint: "k8s-api.eu-west-1.example.com"
+  #     region: "eu-west-1"
+  #     port: 11625
+  #     enabled: true
