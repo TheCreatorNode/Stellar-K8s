@@ -215,6 +215,15 @@ pub async fn reconcile_dr(
             DRSyncStrategy::Consensus => {
                 // Node follows mainnet consensus anyway
             }
+            DRSyncStrategy::StreamingLedger => {
+                // Handled by state_sync::reconcile_state_sync — the sidecar
+                // publishes a ConfigMap every second; the operator reads it
+                // and updates sync_lag via the state_sync reconciler.
+                info!(
+                    "StreamingLedger sync active for standby node {} — managed by state_sync module",
+                    name
+                );
+            }
         }
     }
 
