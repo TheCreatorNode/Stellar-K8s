@@ -263,7 +263,7 @@ async fn disable_plugin(
 // OpenAPI handler
 async fn get_openapi_spec(State(_state): State<Arc<GatewayState>>) -> impl IntoResponse {
     let routes = super::openapi::get_default_routes();
-    let doc = OpenApiGenerator::new("Stellar Operator API", "1.0.0")
+    let mut generator = OpenApiGenerator::new("Stellar Operator API", "1.0.0")
         .description("Kubernetes Operator API for Stellar Infrastructure")
         .add_server(
             "https://api.stellar-operator.svc.cluster.local",
@@ -272,9 +272,13 @@ async fn get_openapi_spec(State(_state): State<Arc<GatewayState>>) -> impl IntoR
         .add_server(
             "https://localhost:9090",
             Some("Local development".to_string()),
-        )
-        .routes(routes)
-        .generate();
+        );
+    
+    for route in routes {
+        generator = generator.add_route(route);
+    }
+    
+    let doc = generator.generate();
 
     (StatusCode::OK, Json(doc))
 }

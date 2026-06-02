@@ -275,7 +275,7 @@ impl ApiKeyAuth {
 }
 
 /// Authentication middleware that chains multiple providers
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct AuthMiddleware {
     jwt: Option<JwtAuth>,
     oauth2: Option<OAuth2Auth>,

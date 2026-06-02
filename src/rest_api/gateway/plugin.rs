@@ -16,7 +16,7 @@ use super::auth::AuthContext;
 use crate::controller::ControllerState;
 
 /// Plugin hook types
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum PluginHook {
     /// Called before request processing
     PreRequest,

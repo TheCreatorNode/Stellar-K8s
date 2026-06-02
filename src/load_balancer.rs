@@ -52,6 +52,7 @@ pub struct Backend {
     pub active_connections: u64,
     pub total_requests: u64,
     pub error_count: u64,
+    #[serde(skip)]
     pub last_health_check: Option<Instant>,
     /// Tags used for A/B test group assignment.
     pub tags: HashMap<String, String>,

@@ -171,10 +171,12 @@ pub struct StellarNodeSpec {
 
     /// Custom pod volumes available to the main Stellar container and init containers.
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(skip)]
     pub volumes: Option<Vec<Volume>>,
 
     /// Custom volume mounts for the main Stellar container.
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(skip)]
     pub volume_mounts: Option<Vec<VolumeMount>>,
 
     /// Global discovery configuration for cross-cluster discovery

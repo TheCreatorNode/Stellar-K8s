@@ -128,7 +128,7 @@ pub async fn check_quota(client: &Client, node: &StellarNode) -> Result<QuotaChe
     for quota in &quotas.items {
         let quota_name = quota.metadata.name.as_deref().unwrap_or("unknown");
 
-        let hard = quota.spec.as_ref().map(|s| &s.hard);
+        let hard = quota.spec.as_ref().and_then(|s| s.hard.as_ref());
         let used_map = quota.status.as_ref().and_then(|s| s.used.as_ref());
 
         if let Some(hard) = hard {
@@ -263,13 +263,8 @@ pub async fn check_limit_range(client: &Client, node: &StellarNode) -> Result<Ve
             // Check max CPU
             if let Some(max_cpu) = limit.max.as_ref().and_then(|m| m.get("cpu")) {
                 let max_m = parse_cpu_millis(max_cpu).unwrap_or(f64::MAX);
-                if let Some(req) = node
-                    .spec
-                    .resources
-                    .limits
-                    .get("cpu")
-                    .and_then(|q| parse_cpu_millis(q))
-                {
+                let req = parse_cpu_millis(&Quantity(node.spec.resources.limits.cpu.clone()));
+                if let Some(req) = req {
                     if req > max_m {
                         violations.push(format!(
                             "LimitRange '{lr_name}': container CPU limit {req:.0}m \
@@ -282,13 +277,8 @@ pub async fn check_limit_range(client: &Client, node: &StellarNode) -> Result<Ve
             // Check max memory
             if let Some(max_mem) = limit.max.as_ref().and_then(|m| m.get("memory")) {
                 let max_b = parse_memory_bytes(max_mem).unwrap_or(f64::MAX);
-                if let Some(req) = node
-                    .spec
-                    .resources
-                    .limits
-                    .get("memory")
-                    .and_then(|q| parse_memory_bytes(q))
-                {
+                let req = parse_memory_bytes(&Quantity(node.spec.resources.limits.memory.clone()));
+                if let Some(req) = req {
                     if req > max_b {
                         violations.push(format!(
                             "LimitRange '{lr_name}': container memory limit {req:.0} bytes \
