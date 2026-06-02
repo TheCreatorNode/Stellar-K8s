@@ -64,6 +64,7 @@ pub mod maintenance;
 pub mod network_isolation;
 pub mod predictive_scaling;
 pub mod pss;
+pub mod quota;
 pub mod resource_meta;
 pub mod snapshot_integrity;
 
