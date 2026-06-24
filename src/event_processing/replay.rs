@@ -75,9 +75,9 @@ impl EventReplayStore {
     }
 
     /// Replay events matching the given options, calling `handler` for each.
-    pub async fn replay<F, Fut>(&self, opts: ReplayOptions, handler: F) -> usize
+    pub async fn replay<F, Fut>(&self, opts: ReplayOptions, mut handler: F) -> usize
     where
-        F: Fn(RecordedEvent) -> Fut,
+        F: FnMut(RecordedEvent) -> Fut,
         Fut: std::future::Future<Output = ()>,
     {
         let buf = self.buffer.read().await;

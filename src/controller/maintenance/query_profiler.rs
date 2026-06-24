@@ -153,10 +153,10 @@ impl QueryProfiler {
 mod tests {
     use super::*;
 
-    #[test]
-    fn recommend_indexes_parses_where_clauses() {
+    #[tokio::test]
+    async fn recommend_indexes_parses_where_clauses() {
         let profiler = QueryProfiler {
-            pool: PgPool::connect_lazy("postgres://localhost/test"),
+            pool: PgPool::connect_lazy("postgres://localhost/test").unwrap(),
         };
         let query = SlowQuery {
             query: "SELECT * FROM payments WHERE payment_id = $1 AND ledger_seq = $2".into(),
